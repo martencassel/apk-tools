@@ -51,3 +51,14 @@ tag: check
 	git tag -s v$(VERSION) -m "apk-tools-$(VERSION)"
 
 src/: libfetch/
+
+image:
+	docker build -t martencassel/alpine:latest .
+
+shell:
+	docker run -it -v $(PWD):/src martencassel/alpine:latest
+
+build:
+	LUA=no make
+
+
