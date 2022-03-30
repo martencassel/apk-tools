@@ -1,0 +1,16 @@
+C:Q1eiZkJd97/XzppCxxoBXqKuVxWDg=
+P:strace
+V:5.14-r0
+A:x86_64
+S:488249
+I:1601536
+T:Diagnostic, debugging and instructional userspace tracer
+U:https://strace.io
+L:BSD-3-Clause
+o:strace
+m:Natanael Copa <ncopa@alpinelinux.org>
+t:1630625674
+c:aae0222b915a0985e775ce126c01793a3a95716a
+D:so:libc.musl-x86_64.so.1 so:libdw.so.1
+p:cmd:strace-log-merge=5.14-r0 cmd:strace=5.14-r0
+

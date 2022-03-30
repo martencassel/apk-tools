@@ -717,6 +717,8 @@ int apk_pkg_read(struct apk_database *db, const char *file, struct apk_package *
 	apk_extract_init(&ctx.ectx, db->ctx, &extract_pkgmeta_ops);
 	apk_extract_generate_identity(&ctx.ectx, &ctx.pkg->csum);
 
+	// The sha1 value is read here...
+	// Its populated in ctx.pkg->csum
 	r = apk_extract(&ctx.ectx, apk_istream_from_file(AT_FDCWD, file));
 	if (r < 0) goto err;
 	if (ctx.pkg->csum.type == APK_CHECKSUM_NONE ||
