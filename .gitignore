@@ -18,3 +18,5 @@ libfetch/*err.h
 *.8
 *.pc
 config.mk
+*.apk
+*.tar.gz

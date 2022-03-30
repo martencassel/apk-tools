@@ -62,10 +62,4 @@ build:
 	LUA=no make
 
 debug:
-	cd /src
-    rm APKINDEX.tar.gz && gdbserver :1234 apk index strace-5.14-r0.apk  -o APKINDEX.tar.gz
-
-attach:
-	echo "gdb"
-	echo "target remote localhost:1234"
-
+	echo "Launch from vscode, inside the container. Install c++ extension"
