@@ -403,3 +403,5 @@ static inline struct list_head *__list_pop(struct list_head *head)
 	     pos = n, n = list_entry(n->member.next, typeof(*n), member))
 
 #endif
+
+void print_buf(void *ptr, int n);

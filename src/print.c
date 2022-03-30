@@ -290,3 +290,9 @@ void apk_print_indented_fmt(struct apk_indent *i, const char *fmt, ...)
 	apk_print_indented(i, APK_BLOB_PTR_LEN(tmp, n));
 	va_end(va);
 }
+
+void print_buf(void *ptr, int n) {
+	char *p = ptr;
+	for(int i = 0; i<n; i++)
+    	printf("%x", p[i]);
+}

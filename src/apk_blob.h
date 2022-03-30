@@ -47,10 +47,12 @@ struct apk_checksum {
 
 static inline const EVP_MD *apk_checksum_evp(int type)
 {
+	printf("apk_checksum_evp\n");
 	switch (type) {
 	case APK_CHECKSUM_MD5:
 		return EVP_md5();
 	case APK_CHECKSUM_SHA1:
+		printf("apk_checksum_evp(%d)\n", type);
 		return EVP_sha1();
 	}
 	return EVP_md_null();

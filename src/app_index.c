@@ -181,8 +181,13 @@ static int index_main(void *ctx, struct apk_ctx *ac, struct apk_string_array *ar
 			}
 		} while (0);
 
+		printf("found: %d\n", found);
 		if (!found) {
+			printf("apk_pkg_read()\n");
+			printf("parg: %s\n", *parg);
 			r = apk_pkg_read(db, *parg, &pkg, FALSE);
+			print_buf(pkg->csum.data, 20);
+
 			if (r < 0) {
 				apk_err(out, "%s: %s", *parg, apk_error_str(r));
 				errors++;

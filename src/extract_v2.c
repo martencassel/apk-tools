@@ -42,6 +42,7 @@ struct apk_sign_ctx {
 
 static void apk_sign_ctx_init(struct apk_sign_ctx *ctx, int action, struct apk_checksum *identity, struct apk_trust *trust)
 {
+	printf("apk_sign_ctx_init(%p, %d, %p, %p)\n", ctx, action, identity, trust);
 	memset(ctx, 0, sizeof(struct apk_sign_ctx));
 	ctx->trust = trust;
 	ctx->action = action;
@@ -61,6 +62,7 @@ static void apk_sign_ctx_init(struct apk_sign_ctx *ctx, int action, struct apk_c
 		break;
 	case APK_SIGN_GENERATE:
 	case APK_SIGN_VERIFY_AND_GENERATE:
+		printf("APK_SIGN_VERIFY_AND_GENERATE !!!!!!\n");
 		ctx->md = EVP_sha1();
 		break;
 	default:
@@ -337,6 +339,7 @@ static int apk_extract_v2_entry(void *pctx, const struct apk_file_info *fi, stru
 
 int apk_extract_v2(struct apk_extract_ctx *ectx, struct apk_istream *is)
 {
+	printf("apk_extract_v2()\n");
 	struct apk_ctx *ac = ectx->ac;
 	struct apk_trust *trust = apk_ctx_get_trust(ac);
 	struct apk_sign_ctx sctx;

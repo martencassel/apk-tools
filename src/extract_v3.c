@@ -251,6 +251,7 @@ int apk_extract_v3(struct apk_extract_ctx *ectx, struct apk_istream *is)
 
 int apk_extract(struct apk_extract_ctx *ectx, struct apk_istream *is)
 {
+	printf("apk_extract()\n");
 	void *sig;
 
 	if (IS_ERR(is)) return PTR_ERR(is);

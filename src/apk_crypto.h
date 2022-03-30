@@ -42,6 +42,10 @@ struct apk_digest {
 #define APK_DIGEST_BLOB(d) APK_BLOB_PTR_LEN((void*)((d).data), (d).len)
 
 static inline const EVP_MD *apk_digest_alg_to_evp(uint8_t alg) {
+	printf("apk_digest_alg_to_evp(%d)\n", alg);
+	if(alg == APK_DIGEST_SHA1) {
+		printf("APK_DIGEST_SHA1!");
+	}
 	switch (alg) {
 	case APK_DIGEST_NONE:	return EVP_md_null();
 	case APK_DIGEST_MD5:	return EVP_md5();
@@ -75,6 +79,7 @@ static inline void apk_digest_set(struct apk_digest *d, uint8_t alg) {
 
 static inline int apk_digest_calc(struct apk_digest *d, uint8_t alg, const void *ptr, size_t sz)
 {
+	printf("apk_digest_cala !");
 	unsigned int md_sz = sizeof d->data;
 	if (EVP_Digest(ptr, sz, d->data, &md_sz, apk_digest_alg_to_evp(alg), 0) != 1)
 		return -APKE_CRYPTO_ERROR;

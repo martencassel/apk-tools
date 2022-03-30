@@ -56,9 +56,16 @@ image:
 	docker build -t martencassel/alpine:latest .
 
 shell:
-	docker run -it -v $(PWD):/src martencassel/alpine:latest
+	docker run -it --net=host -v $(PWD):/src martencassel/alpine:latest
 
 build:
 	LUA=no make
 
+debug:
+	cd /src
+    rm APKINDEX.tar.gz && gdbserver :1234 apk index strace-5.14-r0.apk  -o APKINDEX.tar.gz
+
+attach:
+	echo "gdb"
+	echo "target remote localhost:1234"
 

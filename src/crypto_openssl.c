@@ -50,6 +50,7 @@ uint8_t apk_digest_alg_by_len(int len)
 
 uint8_t apk_digest_alg_from_csum(int csum)
 {
+	printf("apk_digest_alg_from_csum\n");
 	switch (csum) {
 	case APK_CHECKSUM_NONE:		return APK_DIGEST_NONE;
 	case APK_CHECKSUM_MD5:		return APK_DIGEST_MD5;

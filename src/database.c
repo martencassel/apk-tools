@@ -1215,9 +1215,13 @@ struct index_write_ctx {
 
 static int write_index_entry(apk_hash_item item, void *ctx)
 {
+	printf("write_index_entry\n");
+
 	struct index_write_ctx *iwctx = (struct index_write_ctx *) ctx;
 	struct apk_package *pkg = (struct apk_package *) item;
 	int r;
+
+	print_buf(pkg->csum.data, 20);
 
 	if (!iwctx->force && pkg->filename == NULL)
 		return 0;
@@ -1262,13 +1266,14 @@ static int apk_db_index_write_nr_cache(struct apk_database *db)
 
 int apk_db_index_write(struct apk_database *db, struct apk_ostream *os)
 {
+	printf("\napk_db_index_write\n");
 	struct index_write_ctx ctx = { os, 0, FALSE };
 	int r;
 
 	r = apk_hash_foreach(&db->available.packages, write_index_entry, &ctx);
 	if (r < 0)
 		return r;
-
+	printf("ctx.count: %d\n", ctx.count);
 	return ctx.count;
 }
 
@@ -2544,6 +2549,7 @@ static int apk_db_install_script(struct apk_extract_ctx *ectx, unsigned int type
 
 static int apk_db_install_file(struct apk_extract_ctx *ectx, const struct apk_file_info *ae, struct apk_istream *is)
 {
+	printf("apk_db_install_file\n");
 	struct install_ctx *ctx = container_of(ectx, struct install_ctx, ectx);
 	static const char dot1[] = "/./", dot2[] = "/../";
 	struct apk_database *db = ctx->db;

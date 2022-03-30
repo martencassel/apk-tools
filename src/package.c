@@ -440,7 +440,7 @@ int apk_deps_write_layer(struct apk_database *db, struct apk_dependency_array *d
 		apk_blob_push_dep(&blob, db, &deps->item[i]);
 
 		blob = apk_blob_pushed(APK_BLOB_BUF(tmp), blob);
-		if (APK_BLOB_IS_NULL(blob) || 
+		if (APK_BLOB_IS_NULL(blob) ||
 		    apk_ostream_write(os, blob.ptr, blob.len) < 0)
 			return -1;
 
@@ -593,6 +593,7 @@ static char *commit_id(apk_blob_t b)
 
 void apk_pkg_from_adb(struct apk_database *db, struct apk_package *pkg, struct adb_obj *pkginfo)
 {
+	printf("apk_pkg_from_adb\n");
 	struct adb_obj obj;
 	apk_blob_t uid;
 
@@ -694,6 +695,8 @@ static const struct apk_extract_ops extract_pkgmeta_ops = {
 
 int apk_pkg_read(struct apk_database *db, const char *file, struct apk_package **pkg, int v3ok)
 {
+	printf("apk_pkg_read()\n");
+	printf("file: %s\n", file);
 	struct read_info_ctx ctx = {
 		.db = db,
 		.v3ok = v3ok,
@@ -900,6 +903,7 @@ static int write_depends(struct apk_ostream *os, const char *field,
 int apk_pkg_write_index_entry(struct apk_package *info,
 			      struct apk_ostream *os)
 {
+	printf("\napk_pkg_write_index_entry\n");
 	char buf[512];
 	apk_blob_t bbuf = APK_BLOB_BUF(buf);
 
