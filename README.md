@@ -5,9 +5,9 @@ Alpine Package Keeper (apk) is a package manager developed for Alpine Linux.
 Online documentation is available in the [doc/](doc/) directory in the form of man pages.
 
 # Debugging
-
-In the screenshot below we can see the buffer that will be sha1sum:ed using EVP_DigestUpdate.
-When studying this buffer we see that its the APK file, with the GZIP header bytes "1F 8B 08 00" and there are 3 of them.
+If we assume that the Q:1xxx value is a SHA1, we then find the line that computes a SHA1 sum. In APK it's EVP_DigestUpdate.
+When studying the buffer argument to this function  we see that it points to second .tar.gz file in the APK file,
+with the GZIP header bytes "1F 8B 08 00" and there are 3 of them.
 
 ![alt text](EVP_Digest_Final_1.png)
 
