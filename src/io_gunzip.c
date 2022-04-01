@@ -45,6 +45,7 @@ static int gzi_boundary_change(struct apk_gzip_istream *gis)
 
 static ssize_t gzi_read(struct apk_istream *is, void *ptr, size_t size)
 {
+	printf("gzi_read()\n");
 	struct apk_gzip_istream *gis = container_of(is, struct apk_gzip_istream, is);
 	int r;
 
@@ -88,7 +89,7 @@ static ssize_t gzi_read(struct apk_istream *is, void *ptr, size_t size)
 			if (gis->zis->err && gis->zs.avail_in == 0)
 				gis->is.err = gis->zis->err;
 			if (gis->cb != NULL) {
-				gis->cbarg = APK_BLOB_PTR_LEN(gis->cbprev, (void *) gis->zs.next_in - gis->cbprev); 
+				gis->cbarg = APK_BLOB_PTR_LEN(gis->cbprev, (void *) gis->zs.next_in - gis->cbprev);
 				gis->cbprev = gis->zs.next_in;
 			}
 			/* If we hit end of the bitstream (not end
@@ -146,6 +147,7 @@ static int window_bits(int window_bits, int raw)
 
 struct apk_istream *apk_istream_zlib(struct apk_istream *is, int raw, apk_multipart_cb cb, void *ctx)
 {
+	printf("apk_istream_zlib()\n");
 	struct apk_gzip_istream *gis;
 
 	if (IS_ERR(is)) return ERR_CAST(is);

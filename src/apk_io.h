@@ -217,6 +217,7 @@ struct apk_istream *apk_istream_zlib(struct apk_istream *, int,
 				     apk_multipart_cb cb, void *ctx);
 static inline struct apk_istream *apk_istream_gunzip_mpart(struct apk_istream *is,
 					     apk_multipart_cb cb, void *ctx) {
+	printf("apk_istream_gunzip_mpart()\n");
 	return apk_istream_zlib(is, 0, cb, ctx);
 }
 static inline struct apk_istream *apk_istream_gunzip(struct apk_istream *is) {

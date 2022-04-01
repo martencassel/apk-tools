@@ -30,6 +30,7 @@ struct apk_sign_ctx {
 	int data_verified : 1;
 	int allow_untrusted : 1;
 	char data_checksum[EVP_MAX_MD_SIZE];
+	// The SHA1 identity
 	struct apk_checksum identity;
 	EVP_MD_CTX *mdctx;
 
@@ -98,9 +99,14 @@ static int check_signing_key_trust(struct apk_sign_ctx *sctx)
 	return 0;
 }
 
+/*
+	1. Select which signature is to be verified
+	2. Load the corresponding public key into the context object
+*/
 static int apk_sign_ctx_process_file(struct apk_sign_ctx *ctx, const struct apk_file_info *fi,
 		struct apk_istream *is)
 {
+	printf("apk_sign_ctx_process_file()\n");
 	static struct {
 		char type[8];
 		unsigned int nid;
@@ -182,6 +188,9 @@ static int apk_sign_ctx_process_file(struct apk_sign_ctx *ctx, const struct apk_
 	datahash and load it into the context for this function to check against. */
 static int apk_sign_ctx_mpart_cb(void *ctx, int part, apk_blob_t data)
 {
+	printf("apk_sign_ctx_mpart_cb()\n");
+	print_buf(data.ptr, data.len);
+
 	struct apk_sign_ctx *sctx = (struct apk_sign_ctx *) ctx;
 	unsigned char calculated[EVP_MAX_MD_SIZE];
 	int r, end_of_control;
@@ -354,10 +363,19 @@ int apk_extract_v2(struct apk_extract_ctx *ectx, struct apk_istream *is)
 
 	if (!ectx->ops) ectx->ops = &extract_v2verify_ops;
 	ectx->pctx = &sctx;
+
 	apk_sign_ctx_init(&sctx, action, ectx->identity, trust);
-	r = apk_tar_parse(
+
+/*	r = apk_tar_parse(
 		apk_istream_gunzip_mpart(is, apk_sign_ctx_mpart_cb, &sctx),
 		apk_extract_v2_entry, ectx, apk_ctx_get_id_cache(ac));
+*/
+
+	struct apk_istream* is_gunzip_mpart = apk_istream_gunzip_mpart(is, apk_sign_ctx_mpart_cb, &sctx);
+	struct apk_id_cache* id_cache       = apk_ctx_get_id_cache(ac);
+
+	r = apk_tar_parse(is_gunzip_mpart, apk_extract_v2_entry, ectx, id_cache);
+
 	if (r == -ECANCELED) r = 0;
 	if ((r == 0 || r == -APKE_EOF) && !ectx->is_package && !ectx->is_index)
 		r = ectx->ops->v2index ? -APKE_V2NDX_FORMAT : -APKE_V2PKG_FORMAT;

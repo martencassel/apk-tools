@@ -114,9 +114,20 @@ static void handle_extended_header(struct apk_file_info *fi, apk_blob_t hdr)
 	}
 }
 
+/*
+	parser		apk_extract_v2_entry
+
+	is			apk_istream_gunzip_mpart
+
+	ctx			apk_extract_ctx
+
+	idc
+
+*/
 int apk_tar_parse(struct apk_istream *is, apk_archive_entry_parser parser,
 		  void *ctx, struct apk_id_cache *idc)
 {
+	printf("apk_tar_parse()\n");
 	struct apk_file_info entry;
 	struct apk_segment_istream segment;
 	struct tar_header buf;
