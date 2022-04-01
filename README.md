@@ -6,6 +6,9 @@ Online documentation is available in the [doc/](doc/) directory in the form of m
 
 # Debugging
 
+In the screenshot below we can see the buffer that will be sha1sum:ed using EVP_DigestUpdate.
+When studying this buffer we see that its the APK file, with the GZIP header bytes "1F 8B 08 00" and there are 3 of them.
+
 ![alt text](EVP_Digest_Final_1.png)
 
 
