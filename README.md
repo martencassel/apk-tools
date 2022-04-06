@@ -19,6 +19,8 @@ This repo contains a devcontainer with
   - Debugging apk index command
   - Dev dependencies from apk
 
+See https://github.com/martencassel/apk-tools/tree/master/.devcontainer
+
 ## Conclusions:
 
 With the help of debugging i got the above answered:
