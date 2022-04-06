@@ -1,4 +1,12 @@
 # Alpine Package Keeper
+This repo contains a devcontainer (vscode) setup building and  debugging the apk tools.
+
+Also some information on how to find how SHA1 sums or identity hash or pull checksums are computed.
+
+And some info on the APKINDEX and .PKGINFO settings are structured.
+
+###
+
 
 Alpine Package Keeper (apk) is a package manager developed for Alpine Linux.
 
