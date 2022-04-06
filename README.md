@@ -1,18 +1,28 @@
 # Alpine Package Keeper
-This repo contains a devcontainer (vscode) setup building and  debugging the apk tools.
 
-Also some information on how to find how SHA1 sums or identity hash or pull checksums are computed.
+## Motiviations for this fork
 
-And some info on the APKINDEX and .PKGINFO settings are structured.
+This fork was setup to answer the following questions:
 
-###
+* How are apk package checksums calculated in the APK INDEX ? 
 
+https://stackoverflow.com/questions/38837679/alpine-apk-package-repositories-how-are-the-checksums-calculated
 
-Alpine Package Keeper (apk) is a package manager developed for Alpine Linux.
+* How is the APKINDEX format ? 
 
-Online documentation is available in the [doc/](doc/) directory in the form of man pages.
+* How is the .PKGINFO format ? 
 
-https://wiki.alpinelinux.org/wiki/Apk_spec
+* How do you implement the apk index command in another implementation ? 
+
+## Devcontainer
+This repo contains a devcontainer with
+  - Debugging apk index command
+  - Dev dependencies from apk
+
+## Conclusions:
+
+With the help of debugging i got the above answered:
+
 
 ```
 APKINDEX
@@ -59,15 +69,30 @@ datahash = c85ee742cf10a552bcbfafc731b9f2efeed02bc3f3317567b287ba8cf2c1d7fd     
 
 ```
 
-# Debugging
-If we assume that the Q:1xxx value is a SHA1, we then find the line that computes a SHA1 sum. In APK it's EVP_DigestUpdate.
+Reference: https://wiki.alpinelinux.org/wiki/Apk_spec
+
+# The approach 
+
+How to find the identity checksum of specific packages in the APKINDEX records ? 
+(It's not available in .PKGINFO), but in one of the .gz files that the apk consists of.
+
+One conclusion is that GZIP files consists of a set of GZIP files, that is concatenated.
+APK uses this scheme, so one APK is a concatenation of 3 gzip files.
+
+# Debugging reasoning to find SHA1 in the apk index code path:
+
+If we assume that the Q:1xxx value is a SHA1, we then find the line that computes a SHA1 sum. 
+Because they use C, we learn how its implemented using the openssl library.
+
+In APK it's EVP_DigestUpdate, we then set a breakpoint on this function.
+
 When studying the buffer argument to this function  we see that it points to second .tar.gz file in the APK file,
 with the GZIP header bytes "1F 8B 08 00" and there are 3 of them.
 
 ![alt text](EVP_Digest_Final_1.png)
 
 
-# SHA1 example
+# SHA1 example in C for openssl
 
 ```C
 #include <openssl/evp.h>
