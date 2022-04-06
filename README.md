@@ -20,6 +20,7 @@ This repo contains a devcontainer with
   - Dev dependencies from apk
 
 See https://github.com/martencassel/apk-tools/tree/master/.devcontainer
+See https://github.com/martencassel/apk-tools/blob/master/Dockerfile
 
 ## Conclusions:
 
