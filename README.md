@@ -84,6 +84,8 @@ APK uses this scheme, so one APK is a concatenation of 3 gzip files.
 
 # Debugging reasoning to find SHA1 in the apk index code path:
 
+We backtrack from the code that performs the SHA1 operation, and track working variables.
+
 If we assume that the Q:1xxx value is a SHA1, we then find the line that computes a SHA1 sum. 
 Because they use C, we learn how its implemented using the openssl library.
 
@@ -93,12 +95,8 @@ When studying the buffer argument to this function  we see that it points to sec
 with the GZIP header bytes "1F 8B 08 00" and there are 3 of them.
 
 ![alt text](EVP_Digest_Final_1.png)
-
-Its quite hard to follow the code in the apk index implementation, a lot of indirect calls with function pointers and callbacks etc.
-
-This approach is the simmiliary approach one would use to reverse engineering binaries with a debugger like IdaPro...
-where you set a breakpoint on a low level primitive... then deduce the overal flow in the code..
-
+ 
+ 
 # SHA1 example in C for openssl
 
 ```C
