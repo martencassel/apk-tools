@@ -159,8 +159,8 @@ own tar-eof marker.
 
   Gzip container                Gzip container
 --------------------------------------------------------------------------------------------------
-[   [tar archive 1]    ]   [   [tar archive 2]     [ tar archive 3]        ]
-
+APKINDEX.tar.gz =       gzip2: [   [tar archive 1]    ]   gzip2: [   [tar archive 2]     [ tar archive 3]        ]
+                                  compressed                                compressed
 
 
 
