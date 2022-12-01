@@ -157,6 +157,10 @@ The second gzip file consists of two tar archive files that have each their
 own tar-eof marker.
 
 
+  Gzip container                Gzip container
+--------------------------------------------------------------------------------------------------
+[   [tar archive 1]    ]   [   [tar archive 2]     [ tar archive 3]        ]
+
 
 
 
