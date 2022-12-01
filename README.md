@@ -1,5 +1,3 @@
-# Alpine Package Keeper
-
 ## Motiviations for this fork
 
 This fork was setup to answer the following questions:
@@ -13,6 +11,143 @@ https://stackoverflow.com/questions/38837679/alpine-apk-package-repositories-how
 * How is the .PKGINFO format ? 
 
 * How do you implement the apk index command in another implementation ? 
+
+# Alpine Package Keeper
+
+We ask the following questions....
+
+* What is the format of an Alpine Repository index file ? 
+
+We start our investigation by downloading such a file from a public repository:
+
+```bash
+> wget http://nginx.org/packages/alpine/v3.13/main/x86_64/APKINDEX.tar.gz 
+> ls -lt APKINDEX.tar.gz
+-rw-rw-r-- 1 user user 5352 dec  1 16:55 APKINDEX.tar.gz
+```
+
+The file utility confirms this...
+
+```bash
+> file APKINDEX.tar.gz
+APKINDEX.tar.gz: gzip compressed data, max compression, from Unix, original size modulo 2^32 33792
+
+```
+
+We also use the tar program to verify that its a gzip compress tar archive,
+
+```bash
+> tar tvf APKINDEX.tar.gz 
+-rw-rw-r-- builder/builder 256 2022-11-17 13:36 .SIGN.RSA.nginx_signing.rsa.pub
+-rw-r--r-- root/root        16 2022-11-17 13:36 DESCRIPTION
+-rw-r--r-- root/root     31176 2022-11-17 13:36 APKINDEX
+```
+
+So the APKINDEX file is consists of 3 files, a public signature, a description file and the index file.
+
+But what exactly is a gzip file ? What format does it have ? 
+According to wikipedia (https://en.wikipedia.org/wiki/Gzip), a gzip file consists of a sequence
+of bytes organized into member sections (headers, compressed data etc.) 
+A gzip file always start with a magic number, a sequence of 4 bytes, 0x1f 0x8b.
+
+So if APKINDEX.tar.gz is a proper gzip file it must start with two magic number 0x1f 0x8b bytes.
+We can check this using the xxd command,
+
+```bash
+>  xxd APKINDEX.tar.gz|grep 1f8b
+00000000: <1f8b> 0800 0000 0000 0203 d30b f674 f7d3  .............t..
+00000180: 9c90 8694 0004 0000 <1f8b> 0800 0000 0000  ................
+```
+
+or using grep
+
+```bash
+> LANG=C grep -obUaP '\x1f\x8b' APKINDEX.tar.gz
+0:
+392:
+```
+
+We get the offsets to each gzip part.
+
+We now notice two distinct magic numbers. We then conclude that this gzip file
+consists of 2 distinct gzip files concatenated into one, ie.
+
+Reading about gzip on wikipedia and the RFC, it says that gzip was designed
+to be produced in a stream oriented fashion. Especially when consuming data from devices that read data as a stream of bytes (ie. a tape device).
+So in this regard, we might want to consume multiple gzip files from a tape device as a stream, into a file system device, hence we get one file.
+
+Logically, we can think like this..
+```
+> cat file1.gz file2.gz > APKINDEX.tar.gz
+```
+
+So we could split the file back into it parts using the dd command,
+
+```bash
+> dd if=APKINDEX.tar.gz bs=1 skip=392 > file2.gz
+4960+0 records in
+4960+0 records out
+4960 bytes (5,0 kB, 4,8 KiB) copied, 0,0190399 s, 261 kB/s
+
+> ls -lt file2.gz 
+-rw-rw-r-- 1 user user 4960 dec  1 18:27 file2.gz
+
+> dd if=APKINDEX.tar.gz bs=1 seek=0 count=392 > file1.gz
+392+0 records in
+392+0 records out
+392 bytes copied, 0,00240286 s, 163 kB/s
+
+> ls -lt file*.gz
+-rw-rw-r-- 1 marten marten  392 dec  1 18:27 file1.gz
+-rw-rw-r-- 1 marten marten 4960 dec  1 18:27 file2.gz
+
+```
+
+We have now the original two gzip files. 
+
+We could decompress each file, using gzip -d ...
+
+```bash
+> gzip -d file1.gz > file1
+> gzip -d file2.gz > file2
+
+> ls -lt file1 file2
+-rw-rw-r-- 1 marten marten  1024 dec  1 18:27 file1
+-rw-rw-r-- 1 marten marten 33792 dec  1 18:27 file2
+
+> file file1
+file1: POSIX tar archive (GNU)
+
+> file file2
+file2: POSIX tar archive (GNU)
+
+```
+So the two individual files are tar archive files that were compressed using gzip.
+
+## Tar files
+
+What is a tar file ? Its a container for multiple files.
+According to wikipedia, a tar is a sequence bytes, divided into 
+a set of 512-byte length blocks.
+
+If we compare a tar file with gzip, it doesn't contain a starting magic but the end of a tar file, usually has a end-of-file marker which 
+consists of 2 512-bytes filled with zeroes.
+
+So we search for this EOF marker using grep,
+
+```bash
+> LANG=C grep -obUaP '\x00{512}'  file1
+<nothing>
+> LANG=C grep -obUaP '\x00{512}'  file2
+32712:
+33224:
+```
+
+According to the above command the first tar archive file, is missing
+the EOF marker. But the second file has two EOF markers.
+
+
+
 
 ## Devcontainer
 This repo contains a devcontainer with
