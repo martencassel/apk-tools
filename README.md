@@ -147,6 +147,17 @@ So we search for this EOF marker using grep,
 According to the above command the first tar archive file, is missing
 the EOF marker. But the second file has two EOF markers.
 
+## Conclusions
+
+The APKINDEX.tar.gz is a concatenation of two individual gzip files.
+
+The first gzip file consists of one tar archive that has a missing tar-eof marker.
+
+The second gzip file consists of two tar archive files that have each their
+own tar-eof marker.
+
+
+
 
 
 
