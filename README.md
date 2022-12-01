@@ -50,7 +50,8 @@ According to wikipedia (https://en.wikipedia.org/wiki/Gzip), a gzip file consist
 of bytes organized into member sections (headers, compressed data etc.) 
 A gzip file always start with a magic number, a sequence of 4 bytes, 0x1f 0x8b.
 
-So if APKINDEX.tar.gz is a proper gzip file it must start with two magic number 0x1f 0x8b bytes.
+So if APKINDEX.tar.gz is a proper gzip file it must start with 1 magic number (2 bytes), of 0x1f 0x8b in hexdecimal.
+
 We can check this using the xxd command,
 
 ```bash
