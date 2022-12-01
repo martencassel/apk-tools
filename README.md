@@ -74,7 +74,7 @@ We now notice two distinct magic numbers. We then conclude that this gzip file
 consists of 2 distinct gzip files concatenated into one, ie.
 
 Reading about gzip on wikipedia and the RFC, it says that gzip was designed
-to be produced in a stream oriented fashion. Especially when consuming data from devices that read data as a stream of bytes (ie. a tape device).
+to be consumed and produced in a stream oriented fashion. Especially when consuming data from devices that read data as a stream of bytes (ie. a tape device).
 So in this regard, we might want to consume multiple gzip files from a tape device as a stream, into a file system device, hence we get one file.
 
 Logically, we can think like this..
