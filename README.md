@@ -157,13 +157,6 @@ The second gzip file consists of two tar archive files that have each their
 own tar-eof marker.
 
 
-  Gzip container                Gzip container
---------------------------------------------------------------------------------------------------
-APKINDEX.tar.gz =       gzip2: [   [tar archive 1]    ]   gzip2: [   [tar archive 2]     [ tar archive 3]        ]
-                                  compressed                                compressed
-
-
-
 
 ## Devcontainer
 This repo contains a devcontainer with
