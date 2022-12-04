@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.16.0
 
 RUN apk add --no-cache alpine-sdk make git gcc vim gdb build-base file-dev linux-headers \
         zlib zlib-dev zlib-static openssl openssl-dev libressl-dev  \

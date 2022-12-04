@@ -147,6 +147,75 @@ So we search for this EOF marker using grep,
 According to the above command the first tar archive file, is missing
 the EOF marker. But the second file has two EOF markers.
 
+
+## Building the APKINDEX.tar.gz file
+
+```bash
+> tar --format=ustar -cvf first.tar .SIGN.RSA.nginx_signing.rsa.pub 
+> file first.tar 
+first.tar: POSIX tar archive
+> ls -lt first.tar 
+-rw-rw-r-- 1 user user 10240 dec  1 19:08 first.tar
+```
+
+Our tar file seems to end with 18 x 512 byte EOF blocks...
+
+```bash
+> LANG=C grep -obUaP '\x00{512}' first.tar
+768:
+1280:
+1792:
+2304:
+2816:
+3328:
+3840:
+4352:
+4864:
+5376:
+5888:
+6400:
+6912:
+7424:
+7936:
+8448:
+8960:
+9472:
+>  LANG=C grep -obUaP '\x00{512}' first.tar|wc -l 
+18
+```
+
+```bash
+> tar --format=ustar -cvf second.tar DESCRIPTION
+DESCRIPTION
+APKINDEX
+> ls -lt second.tar 
+-rw-rw-r-- 1 user user 40960 dec  1 19:12 second.tar
+> file second.tar 
+second.tar: POSIX tar archive
+
+> LANG=C grep -obUaP '\x00{512}' second.tar
+LANG=C grep -obUaP '\x00{512}' second.tar
+32712:
+33224:
+33736:
+34248:
+34760:
+35272:
+35784:
+36296:
+36808:
+37320:
+37832:
+38344:
+38856:
+39368:
+39880:
+40392:
+> LANG=C grep -obUaP '\x00{512}' second.tar| wc -l
+16
+```
+
+
 ## Conclusions
 
 The APKINDEX.tar.gz is a concatenation of two individual gzip files.
