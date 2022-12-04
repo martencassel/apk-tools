@@ -13,7 +13,8 @@
             "remote": true,
             "cwd": "${workspaceFolder}",
             "gdbpath": "/usr/bin/gdb",
-            "args": ["index", "./test-files/strace-5.14-r0.apk",  "-o", "APKINDEX.tar.gz"],
+            "args": ["update"],
+//            "args": ["index", "./test-files/strace-5.14-r0.apk",  "-o", "APKINDEX.tar.gz"],
             "autorun": [
             ]
         }

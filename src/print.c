@@ -292,7 +292,8 @@ void apk_print_indented_fmt(struct apk_indent *i, const char *fmt, ...)
 }
 
 void print_buf(void *ptr, int n) {
-	char *p = ptr;
-	for(int i = 0; i<n; i++)
-    	printf("%x", p[i]);
+	printf("print_buf\n");
+	// char *p = ptr;
+	// for(int i = 0; i<n; i++)
+    // 	printf("%x", p[i]);
 }

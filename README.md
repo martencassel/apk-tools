@@ -1,230 +1,112 @@
-## Motiviations for this fork
-
-This fork was setup to answer the following questions:
-
-* How are apk package checksums calculated in the APK INDEX ? 
-
-https://stackoverflow.com/questions/38837679/alpine-apk-package-repositories-how-are-the-checksums-calculated
-
-* How is the APKINDEX format ? 
-
-* How is the .PKGINFO format ? 
-
-* How do you implement the apk index command in another implementation ? 
-
-# Alpine Package Keeper
-
-We ask the following questions....
-
-* What is the format of an Alpine Repository index file ? 
-
-We start our investigation by downloading such a file from a public repository:
-
 ```bash
-> wget http://nginx.org/packages/alpine/v3.13/main/x86_64/APKINDEX.tar.gz 
-> ls -lt APKINDEX.tar.gz
--rw-rw-r-- 1 user user 5352 dec  1 16:55 APKINDEX.tar.gz
-```
+- APK v2 package/index terminology
 
-The file utility confirms this...
-
-```bash
-> file APKINDEX.tar.gz
-APKINDEX.tar.gz: gzip compressed data, max compression, from Unix, original size modulo 2^32 33792
-
-```
-
-We also use the tar program to verify that its a gzip compress tar archive,
-
-```bash
-> tar tvf APKINDEX.tar.gz 
--rw-rw-r-- builder/builder 256 2022-11-17 13:36 .SIGN.RSA.nginx_signing.rsa.pub
--rw-r--r-- root/root        16 2022-11-17 13:36 DESCRIPTION
--rw-r--r-- root/root     31176 2022-11-17 13:36 APKINDEX
-```
-
-So the APKINDEX file is consists of 3 files, a public signature, a description file and the index file.
-
-But what exactly is a gzip file ? What format does it have ? 
-According to wikipedia (https://en.wikipedia.org/wiki/Gzip), a gzip file consists of a sequence
-of bytes organized into member sections (headers, compressed data etc.) 
-A gzip file always start with a magic number, a sequence of 4 bytes, 0x1f 0x8b.
-
-So if APKINDEX.tar.gz is a proper gzip file it must start with 1 magic number (2 bytes), of 0x1f 0x8b in hexdecimal.
-
-We can check this using the xxd command,
-
-```bash
->  xxd APKINDEX.tar.gz|grep 1f8b
-00000000: <1f8b> 0800 0000 0000 0203 d30b f674 f7d3  .............t..
-00000180: 9c90 8694 0004 0000 <1f8b> 0800 0000 0000  ................
-```
-
-or using grep
-
-```bash
-> LANG=C grep -obUaP '\x1f\x8b' APKINDEX.tar.gz
-0:
-392:
-```
-
-We get the offsets to each gzip part.
-
-We now notice two distinct magic numbers. We then conclude that this gzip file
-consists of 2 distinct gzip files concatenated into one, ie.
-
-Reading about gzip on wikipedia and the RFC, it says that gzip was designed
-to be consumed and produced in a stream oriented fashion. Especially when consuming data from devices that read data as a stream of bytes (ie. a tape device).
-So in this regard, we might want to consume multiple gzip files from a tape device as a stream, into a file system device, hence we get one file.
-
-Logically, we can think like this..
-```
-> cat file1.gz file2.gz > APKINDEX.tar.gz
-```
-
-So we could split the file back into it parts using the dd command,
-
-```bash
-> dd if=APKINDEX.tar.gz bs=1 skip=392 > file2.gz
-4960+0 records in
-4960+0 records out
-4960 bytes (5,0 kB, 4,8 KiB) copied, 0,0190399 s, 261 kB/s
-
-> ls -lt file2.gz 
--rw-rw-r-- 1 user user 4960 dec  1 18:27 file2.gz
-
-> dd if=APKINDEX.tar.gz bs=1 seek=0 count=392 > file1.gz
-392+0 records in
-392+0 records out
-392 bytes copied, 0,00240286 s, 163 kB/s
-
-> ls -lt file*.gz
--rw-rw-r-- 1 marten marten  392 dec  1 18:27 file1.gz
--rw-rw-r-- 1 marten marten 4960 dec  1 18:27 file2.gz
-
-```
-
-We have now the original two gzip files. 
-
-We could decompress each file, using gzip -d ...
-
-```bash
-> gzip -d file1.gz > file1
-> gzip -d file2.gz > file2
-
-> ls -lt file1 file2
--rw-rw-r-- 1 marten marten  1024 dec  1 18:27 file1
--rw-rw-r-- 1 marten marten 33792 dec  1 18:27 file2
-
-> file file1
-file1: POSIX tar archive (GNU)
-
-> file file2
-file2: POSIX tar archive (GNU)
-
-```
-So the two individual files are tar archive files that were compressed using gzip.
-
-## Tar files
-
-What is a tar file ? Its a container for multiple files.
-According to wikipedia, a tar is a sequence bytes, divided into 
-a set of 512-byte length blocks.
-
-If we compare a tar file with gzip, it doesn't contain a starting magic but the end of a tar file, usually has a end-of-file marker which 
-consists of 2 512-bytes filled with zeroes.
-
-So we search for this EOF marker using grep,
-
-```bash
-> LANG=C grep -obUaP '\x00{512}'  file1
-<nothing>
-> LANG=C grep -obUaP '\x00{512}'  file2
-32712:
-33224:
-```
-
-According to the above command the first tar archive file, is missing
-the EOF marker. But the second file has two EOF markers.
-
-
-## Building the APKINDEX.tar.gz file
-
-```bash
-> tar --format=ustar -cvf first.tar .SIGN.RSA.nginx_signing.rsa.pub 
-> file first.tar 
-first.tar: POSIX tar archive
-> ls -lt first.tar 
--rw-rw-r-- 1 user user 10240 dec  1 19:08 first.tar
-```
-
-Our tar file seems to end with 18 x 512 byte EOF blocks...
-
-```bash
-> LANG=C grep -obUaP '\x00{512}' first.tar
-768:
-1280:
-1792:
-2304:
-2816:
-3328:
-3840:
-4352:
-4864:
-5376:
-5888:
-6400:
-6912:
-7424:
-7936:
-8448:
-8960:
-9472:
->  LANG=C grep -obUaP '\x00{512}' first.tar|wc -l 
-18
+record                      A 512 byte sequence of bytes, a block
+h                           Header record
+d                           Data record
+e1, e2                      Eof markers (two blocks 1024 bytes)
+tar archive                 A tar archive file, consiting of a set of files, a sequence of blocks ending with the eof marker blocks.
+tar segment                 A set of tar records, a sequence of tar records withouth a ending eof marker.
+gzip stream                 A stream is a sequence gzip compressed data, starting with a magic number, headers, body and an ending 8-byte trailer.
+[ ... ]                     A gzip stream containing blocks
+concatenate                 To link togther things in a series or chain. ie. concatenate.
+                            Concatenate 3 gzip streams sequentially in a file.
+package signature           A single file that is a binary signature over the concatenated (control + data) gzip streams
+package signature file      DigestRSA-PKCS1v15(SHA1( apk-gzip-stream-2 ++ apk-gzip-stream-3), DER)
+index signature file        DigestRSA-PKCS1v15(SHA1( index-gzip-stream-2), DER)
+h                           A tar header record block
+h1                          Signature file header, permission 0644, uid 0 and gid 0.
+C: checksum                 The SHA1 hash of the "Control data" gzip stream (gzip stream 2)
 ```
 
 ```bash
-> tar --format=ustar -cvf second.tar DESCRIPTION
-DESCRIPTION
-APKINDEX
-> ls -lt second.tar 
--rw-rw-r-- 1 user user 40960 dec  1 19:12 second.tar
-> file second.tar 
-second.tar: POSIX tar archive
+- APK v2 package layout
 
-> LANG=C grep -obUaP '\x00{512}' second.tar
-LANG=C grep -obUaP '\x00{512}' second.tar
-32712:
-33224:
-33736:
-34248:
-34760:
-35272:
-35784:
-36296:
-36808:
-37320:
-37832:
-38344:
-38856:
-39368:
-39880:
-40392:
-> LANG=C grep -obUaP '\x00{512}' second.tar| wc -l
-16
+Gzip                  apk-gzip-stream1       apk-gzip-stream2            apk-gzip-stream-3
+
+Tar                   Tar segment 1          Tar segment 2               Tarball
+
+Blocks                [h1, d]                [ h, d, h d ]               [ h, d, h, d, ..., e1, e2 ]
+
+Files                 Package signature      Control data                Package data
+
+- Index v2 format
+
+Gzip                  index-gzip-stream1                index-gzip-stream2
+
+Tar                   Tar segment 1                     Tarball
+
+Blocks                [h1, d, ...]                      [h, d, ..., d1, d2]
+
+Files                 .SIGN.RSA.<key_name>.rsa.pub      A DESCRIPTION file and an APKINDEX file
+
+-----------------------------------------------------------------------------------------------------------------
 ```
 
+```bash
+Examples
 
-## Conclusions
+- Create a unsigned APKINDEX file 
+> apk index *.apk -o APKINDEX.unsigned.tar.gz && \
 
-The APKINDEX.tar.gz is a concatenation of two individual gzip files.
+- Create a index signature file (.SIGN.RSA.marten.rsa.pub)
+> openssl dgst -sha1 -sign marten.rsa.priv -out .SIGN.RSA.marten.rsa.pub APKINDEX.unsigned.tar.gz
 
-The first gzip file consists of one tar archive that has a missing tar-eof marker.
+- Create a signed APKINDEX file (1)
+> tar -c .SIGN.RSA.marten.rsa.pub | abuild-tar --cut | gzip -9 > signature.tar.gz && \
+> cat signature.tar.gz APKINDEX.unsigned.tar.gz > APKINDEX.tar.gz
+```
 
-The second gzip file consists of two tar archive files that have each their
-own tar-eof marker.
- 
+- What is a tar file ? 
+An archive created by tar, utility. 
+It contains multiple files (aka. tarball) stored in an uncompressed format along with metadata about the archive.
+An archive may contain many files, the archive itself is a single file.
+
+- What format has a tar file ? 
+A series of file entries terminated by an end-of-archive entry.
+The end-of-archive entry consists of two 512 blocks of zero bytes.
+A file entry describes one of the files in the archive. The file entry consists 
+of a file header and the contents of the file. File headers contain file names etc.
+
+- What is the file layout of tar file ? 
+A archive file contains a series of blocks. Each block contains BLOCKSIZE bytes.
+Usually the BLOCKSIZE is 512 bytes.
+
+- What is the layout of a file in a tar archive ? 
+Each file is represented by a header block, with metadata about the file.
+Followed by zero or more blocks which give the contents of the file.
+At the end of the archive file there are two 512 byte blocks 
+filled with zeroes as an end-of-file marker.
+
+- What is the physical definition of a tar file ? 
+A linear sequence of blocks. The file is terminated by two blocks of zero bytes. 
+Every block has the size 512 bytes.
+A tar file consists of file entries, and each file entry is represented by two or more blocks.
+First block is always the entry header, rest is content of the file.
+
+- What is a segment ? 
+A portion of a file. Portions of a tar file (segments).
+
+- What is a record ? 
+The end of a normal tar file contains two null records (blocks) at the end.
+
+- What is a sequence ? 
+An enumerated collection of objects in which repetition are allowed and order matters.
+
+- What is a stream ? 
+A sequence of data elements made available over time. They are processed one at a time, rather in large batches.
+
+* Archive consists of a series of file entries terminated by an end-of-archive entry
+
+* A tar archive file contains a series of block each 512 bytes length
+
+* File entries
+   - A file header block
+   - Data blocks
+
+* A file usually ends with a end-of-file marker (two zero blocks)
+
+
 
 ## Devcontainer
 This repo contains a devcontainer with
@@ -331,4 +213,5 @@ sha1(char *buf, int len) {
 
 https://gist.github.com/ytakano/964119
 
+https://wiki.alpinelinux.org/wiki/Apk_spec
  
